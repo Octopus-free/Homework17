@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="UTF-8">
+    <title>Запрос информации о вакансиях</title>
+</head>
+<body>
+
+<ul class="nav nav-tabs justify-content-center">
+  <li class="nav-item">
+    <a class="nav-link" href="/">Главная</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link active" href="/vacancies">Вакансии</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/contacts">Контакты</a>
+  </li>
+
+</ul>
+
+<form method="post">
+  <div class="form-group container-md">
+    <label for="formGroupExampleInput">Какую вакансию Вы ищите?</label>
+    <input type="text" class="form-control" id="formGroupExampleInput" name="vacancy_text" placeholder="введите текст запроса в это поле, например: python developer">
+  </div>
+  <div class="form-group container-md">
+    <label for="formGroupExampleInput2">В каком городе Вы хотели бы работать?</label>
+    <input type="text" class="form-control" id="formGroupExampleInput2" name="vacancy_town" placeholder="ввведите текст запроса в это поле, например: Москва">
+  </div>
+  <button type="submit" class="btn btn-primary btn-lg btn-block container-md">Отправить запрос на поиск вакансий</button>
+</form>
+
+
+
+<br>
+
+<div class="container">
+<div class="row text-center">
+<div class="col-2">
+<div id="list-example" class="list-group">
+      {% for vacancy in data.keys() %}
+          <a class="list-group-item list-group-item-action" href="#list-item-{{vacancy}}">Вакансия №{{vacancy}}</a>
+      {% endfor %}
+<!--  <a class="list-group-item list-group-item-action" href="#list-item-1">Вакансия №1</a>-->
+<!--  <a class="list-group-item list-group-item-action" href="#list-item-2">Вакансия №2</a>-->
+<!--  <a class="list-group-item list-group-item-action" href="#list-item-3">Вакансия №3</a>-->
+<!--  <a class="list-group-item list-group-item-action" href="#list-item-4">Вакансия №4</a>-->
+</div>
+</div>
+
+  <div class="col-10">
+<div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example ">
+      {% for vacancy, vacancy_text in data.items() %}
+        <h4 id="list-item-{{vacancy}}">Информация по вакансии №{{vacancy}}</h4>
+        <a href="{{vacancy_text['url']}}"> Ссылка на вакансию </a>
+        <p>{{vacancy_text['salary']}} </p>
+        <p> {{vacancy_text['skills']}}</p>
+      {% endfor %}
+  <!--  <h4 id="list-item-1">Информация по вакансии №1</h4>-->
+  <!--  <p>{{data}}</p>-->
+  <!--  <h4 id="list-item-2">Информация по ваканси №2</h4>-->
+  <!--  <p>Топ навыки, зарплата, соц-пакет!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!00000000000000000000000!1</p>-->
+  <!--  <h4 id="list-item-3">Информация по ваканси №3</h4>-->
+  <!--  <p>Топ навыки, зарплата, соц-пакет</p>-->
+  <!--  <h4 id="list-item-4">Информация по ваканси №4</h4>-->
+  <!--  <p>Топ навыки, зарплата, соц-пакет</p>-->
+</div>
+</div>
+
+</div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+</html>
