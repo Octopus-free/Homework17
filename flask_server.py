@@ -32,6 +32,8 @@ def hh_request_post():
     # передавая ему, введенные пользователем данные
     hh_response = HHRequests(hh_request_text, hh_request_town)
 
+    hh_response.save_inf_into_db
+
     # создаем словарь, вызывая метод make_dict_for_html
     # из экземпляра класса HHRequests
     dict_for_html = hh_response.make_dict_for_html

@@ -98,138 +98,244 @@ class HHRequests:
         # показываем, какой файл бд необходимо использовать для соединения
         db_connection = sqlite3.connect('hm17.db')
 
-        # создаем курсор для запросов к бд
-        db_cursor = db_connection.cursor()
+        # # создаем курсор для запросов к бд
+        # db_cursor = db_connection.cursor()
 
-        return db_cursor
+        return db_connection
 
     # функция для проверки базы данных
     # проверяем есть ли в таблице areas_book значение региона из запроса пользователя
-    @property
-    def check_areas_book(self):
+
+    def check_areas_book(self, id_from_hh):
 
         # создаем кортеж для передачи имени региона как параметр
         # в запрос к бд
-        tuple_for_request = (self.vacancy_town,)
+        tuple_for_request = (id_from_hh,)
 
         # создаем курсор к бд на основе соединения,
         # созданного в функции sql_connection
-        area_cursor = self.sql_connection
+        area_connection = self.sql_connection
+        area_cursor = area_connection.cursor()
 
         # отправляем в бд запрос с проверкой, есть ли в таблице areas_book
         # регион в котором пользователь ищет вакансии
-        area_cursor.execute('select count(*) from areas_book where area_name =?', tuple_for_request)
+        area_cursor.execute('select count(*) from areas_book where id_from_hh =?', tuple_for_request)
 
         # считываем все строки ответа от бд
         area_check_response = area_cursor.fetchall()
 
         # возравщаем True or False в зависимости от ответа бд
         if area_check_response[0][0] == 0:
-            print('в таблице регионов нет такого региона(города)')
-            area_cursor.execute('insert into areas_book(area_name) values (?)', tuple_for_request)
-            sqlite3.connect('hm17.db').commit()
-            print(f'регион {self.vacancy_town} добавлен в бд')
+            return 0
         else:
-            print('в таблице регионов есть такой регион(город)')
+            return 1
 
     #
-
-
 
     # функция для проверки базы данных
     # проверяем есть ли в таблице skills_book значение навыка
     # из запрошенных пользователем вакансий
-    def check_skills_book(self, skill_name):
+    def check_skills_book(self, id_from_hh):
 
         # создаем кортеж для передачи имени навыка как параметр
         # в запрос к бд
-        tuple_for_request = (skill_name,)
+        tuple_for_request = (id_from_hh,)
 
         # создаем курсор к бд на основе соединения,
         # созданного в функции sql_connection
-        skill_select_cursor = self.sql_connection
+        skill_connection = self.sql_connection
+        skill_cursor = skill_connection.cursor()
 
         # отправляем в бд запрос с проверкой, есть ли в таблице skills_book
         # навык который содержится в запрошенных пользователем вакансиях
-        skill_select_cursor.execute('select count(*) from areas_book where area_name =?', tuple_for_request)
+        skill_cursor.execute('select count(*) from skills_book where id_from_hh =?', tuple_for_request)
 
         # считываем все строки ответа от бд
-        skill_check_response = skill_select_cursor.fetchall()
+        skill_check_response = skill_cursor.fetchall()
 
         # возравщаем True or False в зависимости от ответа бд
         if skill_check_response[0][0] == 0:
-            print('в таблице навыков нет такого навыка')
-            return False
+            return 0
         else:
-            print('в таблице навыков есть такой навык')
-            return True
+            return 1
 
-    # функция для создания словаря под вывод данных на страницах html
+    # функция для проверки базы данных
+    # проверяем есть ли в таблице vacancies данные о вакансии
+    # из запрошенных пользователем вакансий
+    def check_vacancies(self, id_from_hh):
+
+        # создаем кортеж для передачи имени навыка как параметр
+        # в запрос к бд
+        tuple_for_request = (id_from_hh,)
+
+        # создаем курсор к бд на основе соединения,
+        # созданного в функции sql_connection
+        vacancies_connection = self.sql_connection
+        vacancies_cursor = vacancies_connection.cursor()
+
+        # отправляем в бд запрос с проверкой, есть ли в таблице skills_book
+        # навык который содержится в запрошенных пользователем вакансиях
+        vacancies_cursor.execute('select count(*) from vacancies where id_from_hh =?', tuple_for_request)
+
+        # считываем все строки ответа от бд
+        vacancies_check_response = vacancies_cursor.fetchall()
+
+        # возравщаем True or False в зависимости от ответа бд
+        if vacancies_check_response[0][0] == 0:
+            return 0
+        else:
+            return 1
+
+    # функция для сохранения информации в бд
     @property
-    def make_dict_for_html(self):
+    def save_inf_into_db(self):
+
+        # создаем курсор к бд на основе соединения,
+        # созданного в функции sql_connection
+        db_connection = self.sql_connection
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute('delete from vacancies')
+        db_cursor.execute('delete from areas_book')
+        db_cursor.execute('delete from skills_book')
+
+        db_connection.commit()
 
         # создаем словарь с исходными данным используя метод hh_get_vacancy_inf
         # данный словарь содержит информацию с сайта hh.ru по запросу от пользователя
         dict_from_hh = self.hh_get_vacancy_inf
 
-        # создаем пустой словарь для дальнейшего
-        # заполнения динамических html страниц
-        dict_for_html = {}
-
-        # т.к. в Python словари не имеют индексов
-        # создаем список длиной равной длине словаря с информацией из hh.ru
-        vacancies_list_for_index = list(dict_from_hh.values())
-
         # создаем цикл для разбора информации по каждой вакансии
-        for each_value in dict_from_hh.values():
+        for each_key, each_value in dict_from_hh.items():
 
-            # создаем ключ для вакансии
-            vacancy_index = vacancies_list_for_index.index(each_value) + 1
+            id_for_save_into_db = each_key
+            url_for_save_into_db = each_value['url']
 
-            # в словарь добавляем ключ для вакансии
-            dict_for_html[vacancy_index] = {}
+            if each_value['salary'] is not None:
+                if each_value['salary']['from'] is not None and each_value['salary']['currency'] == 'RUR':
+                    salary_for_save_into_db = 'Зарплата - {}'.format(each_value['salary']['from'])
 
-            # по добавленному ключу добавляем вложенный словарь
-            # ключ - url, значение - http ссылка на вакансию
-            dict_for_html[vacancy_index]['url'] = each_value['url']
+            # если зарплата в вакансии не указана
+            # передаем в salary_string соответствующее сообщение
+                else:
+                    salary_for_save_into_db = 'Зарплата в рублях не указана'
+            else:
+                salary_for_save_into_db = 'Зарплата в рублях не указана'
 
-            # создаем пустую строку для формирования перечня ключевых навыков
-            # требуемых для каждой вакансии
-            skills_string = ''
+            tuple_for_save_into_vacancies = (url_for_save_into_db, id_for_save_into_db, salary_for_save_into_db,)
+            if self.check_vacancies(id_for_save_into_db) == 0:
+                db_cursor.execute('insert into vacancies(vacancy_url, id_from_hh, salary) values(?, ?, ?)',
+                                  tuple_for_save_into_vacancies)
+
+            db_connection.commit()
+
+            tuple_for_save_into_areas_book = (self.vacancy_town, id_for_save_into_db)
+
+            if self.check_areas_book(id_for_save_into_db) == 0:
+                db_cursor.execute('insert into areas_book(area_name, id_from_hh) values (?, ?)',
+                                  tuple_for_save_into_areas_book)
 
             # если ключевые навыки в вакансии указаны
             # передаем их через запятую в skills_string
             if len(each_value['skills']) != 0:
                 for each_skill in each_value['skills']:
-                    skills_string += '{}, '.format(each_skill['name'])
-            # если ключевые навыки не указаны
-            # передаем в skills_string сообщение об отсутствии
-            else:
-                skills_string = 'не указаны  '
+                    skills_for_save_into_db = each_skill['name']
+                    tuple_for_save_into_skills_book = (skills_for_save_into_db, id_for_save_into_db,)
+                    if self.check_skills_book(id_for_save_into_db) == 0:
+                        db_cursor.execute('insert into skills_book(skill_name, id_from_hh) values (?, ?)',
+                                          tuple_for_save_into_skills_book)
+                    # print(f'навык {skills_for_save_into_db}, добавлен в таблицу skill_book '
+                    #       f'для вакансии {id_for_save_into_db}')
 
-            # "отрезаем ',' и пробел в строке после последнего указанного в вакансии навыка
-            skills_string = skills_string[:-2]
+            db_connection.commit()
+
+    # функция для создания словаря под вывод данных на страницах html
+    @property
+    def make_dict_for_html(self):
+
+        # создаем пустой словарь для дальнейшего
+        # заполнения динамических html страниц
+        dict_for_html = {}
+
+
+        db_connection = self.sql_connection
+
+        db_cursor = db_connection.cursor()
+
+        db_cursor.execute('select count(*) from vacancies')
+
+        # count_vacancies_in_db = db_cursor.fetchall()[0][0]
+
+        # т.к. в Python словари не имеют индексов
+        # создаем список длиной равной длине словаря с информацией из hh.ru
+        # vacancies_list_for_index = list(count_vacancies_in_db)
+
+        db_cursor.execute('select id_from_hh from vacancies')
+        list_from_db = db_cursor.fetchall()
+
+        list_vacancies_id = []
+        for element in list_from_db:
+            list_vacancies_id.append(element[0])
+
+        # создаем цикл для разбора информации по каждой вакансии
+        for element in list_vacancies_id:
+
+            # создаем ключ для вакансии
+            vacancy_index = list_vacancies_id.index(element) + 1
+
+            # в словарь добавляем ключ для вакансии
+            dict_for_html[vacancy_index] = {}
+
+            # создаем кортеж для передачи его как параметр
+            # в запрос к бд, в кортеж передаем id вакансии с hh.ru
+            tuple_for_db = (element,)
+
+            # создаем запрос к бд для получения url,
+            # соответствующего id вакансии с hh.ru
+            db_cursor.execute('select vacancy_url from vacancies '
+                              'where id_from_hh = ?', tuple_for_db)
+
+            # получаем url из бд
+            url_from_db = db_cursor.fetchall()
+
+            # по добавленному ключу добавляем вложенный словарь
+            # ключ - url, значение - http ссылка на вакансию
+            dict_for_html[vacancy_index]['url'] = url_from_db[0][0]
+
+            # создаем пустую строку для формирования перечня ключевых навыков
+            # требуемых для каждой вакансии
+            skill_string = ''
+
+            # создаем запрос к бд для получения перечня навыков,
+            # соответствующего id вакансии с hh.ru
+            db_cursor.execute('select b.skill_name from vacancies a, skills_book b '
+                              'where a.id_from_hh = b.id_from_hh '
+                              'and a.id_from_hh = ?', tuple_for_db)
+
+            # получаем лист с навыками из бд
+            # по каждой вакансии
+            skills_from_db = db_cursor.fetchall()
+
+            for skill_name in skills_from_db:
+                skill_string += '{}, '.format(skill_name[0])
+
+            skill_string = skill_string[:-2]
 
             # добавляем во вложенный словарь
             # ключ - skills, значение - строка skills_string с перечнем навыков
-            dict_for_html[vacancy_index]['skills'] = f'Ключевы навыки: {skills_string}'
+            dict_for_html[vacancy_index]['skills'] = f'Ключевые навыки: {skill_string}'
 
-            # если зарплата в вакансии указана
-            # передаем в salary_string сообщение с указанием зарплаты
-            if each_value['salary'] is not None:
-                if each_value['salary']['from'] is not None and each_value['salary']['currency'] == 'RUR':
-                    salary_string = 'Зарплата - {}'.format(each_value['salary']['from'])
-                    # salary_string += f'{salary_string}\n'
-            # если зарплата в вакансии не указана
-            # передаем в salary_string соответствующее сообщение
-                else:
-                    salary_string = 'Зарплата в рублях не указана'
-            else:
-                salary_string = 'Зарплата в рублях не указана'
+            # создаем запрос к бд для получения salary,
+            # соответствующего id вакансии с hh.ru
+            db_cursor.execute('select salary from vacancies '
+                              'where id_from_hh = ?', tuple_for_db)
+
+            # получаем salary из бд
+            salary_from_db = db_cursor.fetchall()
 
             # добавляем во вложенный словарь
             # ключ - salary, значение - строка salary_string
-            dict_for_html[vacancy_index]['salary'] = salary_string
+            dict_for_html[vacancy_index]['salary'] = salary_from_db[0][0]
 
         with open('vacancies_for_html', 'w') as f:
             json.dump(dict_for_html, f)
